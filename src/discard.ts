@@ -27,7 +27,7 @@ export class TabDiscard {
         const cutoff = Date.now() - (minutes * 60000);
         let count = 0;
         for (const tab of tabs) {
-            if (tab.id && (tab.lastAccessed || 0) < cutoff && !tab.pinned) {
+            if (tab.id && ((tab as any).lastAccessed || 0) < cutoff && !tab.pinned) {
                 try { await chrome.tabs.discard(tab.id); count++; } catch { }
             }
         }
@@ -60,7 +60,7 @@ export class TabDiscard {
             const tabs = await chrome.tabs.query({ active: false, discarded: false });
             const cutoff = Date.now() - (maxAgeMinutes * 60000);
             for (const tab of tabs) {
-                if (tab.id && !tab.pinned && !tab.audible && (tab.lastAccessed || 0) < cutoff) {
+                if (tab.id && !tab.pinned && !tab.audible && ((tab as any).lastAccessed || 0) < cutoff) {
                     const dominated = tab.url ? !Array.from(this.whitelist).some((d) => tab.url!.includes(d)) : true;
                     if (dominated) try { await chrome.tabs.discard(tab.id); } catch { }
                 }
