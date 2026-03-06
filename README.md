@@ -1,118 +1,100 @@
 # chrome-tab-discard
 
-[![npm version](https://img.shields.io/npm/v/chrome-tab-discard)](https://npmjs.com/package/chrome-tab-discard)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Chrome Web Extension](https://img.shields.io/badge/Chrome-Web%20Extension-orange.svg)](https://developer.chrome.com/docs/extensions/)
-[![CI Status](https://github.com/theluckystrike/chrome-tab-discard/actions/workflows/ci.yml/badge.svg)](https://github.com/theluckystrike/chrome-tab-discard/actions)
-[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
-[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
-[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-tab-discard?style=social)](https://github.com/theluckystrike/chrome-tab-discard)
+Tab discarding and memory management for Chrome extensions. Freeze inactive tabs, auto-discard by age, whitelist domains, and track tab statistics. Built for Manifest V3.
 
-> Discard inactive tabs to save memory in Chrome extensions.
+INSTALL
 
-**chrome-tab-discard** provides utilities to automatically discard unused tabs to free up memory while preserving tab state. Part of the Zovo Chrome extension utilities.
-
-Part of the [Zovo](https://zovo.one) developer tools family.
-
-## Overview
-
-chrome-tab-discard provides utilities to automatically discard unused tabs to free up memory while preserving tab state.
-
-## Features
-
-- ✅ **Discard Tabs** - Free memory by discarding inactive tabs
-- ✅ **Auto Discard** - Automatic discarding based on inactivity
-- ✅ **Pinned Tabs** - Keep pinned tabs protected
-- ✅ **TypeScript Support** - Full type definitions included
-
-## Installation
-
-```bash
+```
 npm install chrome-tab-discard
 ```
 
-## Usage
+QUICK START
 
-### Discard Tab
-
-```javascript
+```typescript
 import { TabDiscard } from 'chrome-tab-discard';
 
+// Discard a single tab by ID
 await TabDiscard.discard(tabId);
+
+// Discard all inactive tabs (skips pinned and audible)
+const count = await TabDiscard.discardInactive();
+
+// Discard tabs untouched for 45 minutes
+await TabDiscard.discardOlderThan(45);
 ```
 
-### Auto Discard
+STATIC METHODS
 
-```javascript
-const discard = new TabDiscard({
-  threshold: 10000, // 10 min inactivity
-  keepPinned: true,
-});
+TabDiscard.discard(tabId)
+Discards a specific tab by its numeric ID. Returns the updated chrome.tabs.Tab object, or undefined if the tab could not be discarded.
 
-discard.start();
+TabDiscard.discardInactive()
+Queries all non-active, non-discarded tabs and discards each one that is not pinned and not playing audio. Returns the number of tabs discarded.
+
+TabDiscard.discardOlderThan(minutes)
+Discards tabs whose lastAccessed timestamp is older than the given threshold in minutes. Pinned tabs are always skipped. Returns the number of tabs discarded.
+
+TabDiscard.getDiscarded()
+Returns an array of all currently discarded tabs.
+
+TabDiscard.getTabStats()
+Returns an object with counts across your tab population.
+
+```typescript
+const stats = await TabDiscard.getTabStats();
+// { total, active, discarded, audible, pinned }
 ```
 
-## API
+INSTANCE METHODS
 
-### Methods
+The class can also be instantiated to manage a domain whitelist and run periodic auto-discard.
 
-- `discard(tabId)` - Discard specific tab
-- `discardAll()` - Discard all discardable
-- `start()` - Start auto discard
+addToWhitelist(domain)
+Adds a domain string to the internal whitelist. Tabs whose URL contains a whitelisted domain will never be auto-discarded. Returns `this` for chaining.
 
-## Browser Support
+startAutoDiscard(intervalMinutes?, maxAgeMinutes?)
+Starts a repeating interval that discards inactive tabs older than maxAgeMinutes (default 60). Runs every intervalMinutes (default 30). Skips pinned tabs, audible tabs, and whitelisted domains. Returns the interval handle.
 
-- Chrome 90+
+```typescript
+const manager = new TabDiscard();
+manager
+  .addToWhitelist('github.com')
+  .addToWhitelist('docs.google.com');
 
-## Contributing
+manager.startAutoDiscard(15, 30);
+// Every 15 minutes, discard tabs idle for 30+ minutes
+// github.com and docs.google.com tabs are always kept
+```
 
-Contributions are welcome! Please follow these steps:
+PERMISSIONS
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/discard-improvement`
-3. **Make** your changes
-4. **Test** your changes: `npm test`
-5. **Commit** your changes: `git commit -m 'Add new feature'`
-6. **Push** to the branch: `git push origin feature/discard-improvement`
-7. **Submit** a Pull Request
+Your manifest.json needs the tabs permission.
 
-### Development Setup
+```json
+{
+  "permissions": ["tabs"]
+}
+```
 
-```bash
-# Clone the repository
+BROWSER SUPPORT
+
+Chrome 90 and above. Requires Manifest V3.
+
+CONTRIBUTING
+
+Fork the repo, create a branch, make your changes, and open a pull request.
+
+```
 git clone https://github.com/theluckystrike/chrome-tab-discard.git
 cd chrome-tab-discard
-
-# Install dependencies
 npm install
-
-# Run tests
-npm test
-
-# Build
 npm run build
 ```
 
-## See Also
+LICENSE
 
-### Related Zovo Repositories
-
-- [zovo-extension-template](https://github.com/theluckystrike/zovo-extension-template) - Boilerplate for building privacy-first Chrome extensions
-- [zovo-types-webext](https://github.com/theluckystrike/zovo-types-webext) - Comprehensive TypeScript type definitions for browser extensions
-- [chrome-tab-search](https://github.com/theluckystrike/chrome-tab-search) - Search across tabs
-
-### Zovo Chrome Extensions
-
-- [Zovo Tab Manager](https://chrome.google.com/webstore/detail/zovo-tab-manager) - Manage tabs efficiently
-- [Zovo Focus](https://chrome.google.com/webstore/detail/zovo-focus) - Block distractions
-
-Visit [zovo.one](https://zovo.one) for more information.
-
-## License
-
-MIT - [Zovo](https://zovo.one)
+MIT. See LICENSE file for details.
 
 ---
 
-Built by [Zovo](https://zovo.one)
+Part of the Zovo family of Chrome extension tools. Visit zovo.one for more.
